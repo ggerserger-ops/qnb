@@ -1,18 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './App.css';
+import './App.css'; // mevcut stillerin
 
 function Bilgi() {
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
-
-  // 60 saniye sonra otomatik yönlendirme
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.href = '/basvuru-alindi'; // 60 saniye sonra yönlendirme
-    }, 60000); // 60000 ms = 60 saniye
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleInput = (e, type) => {
     const el = e.target;
@@ -23,44 +14,9 @@ function Bilgi() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Form verilerini topla
-    const formData = new FormData(e.target);
-    const data = {
-      isim: formData.get('isim'),
-      soyisim: formData.get('soyisim'),
-      tc: formData.get('tc'),
-      tel: formData.get('tel'),
-      kredi_karti_limiti: formData.get('kredi_karti_limiti'),
-    };
-
-    try {
-      // REACT_API_URL ortam değişkeninden API endpoint'ini al
-      const apiUrl = process.env.REACT_API_URL || 'http://localhost:3001/submit';
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API isteği başarısız');
-      }
-
-      const result = await response.json();
-      console.log('API yanıtı:', result);
-
-      // Başarılıysa yönlendirme
-      navigate('/basvuru-alindi');
-    } catch (err) {
-      setError(err.message || 'Bir hata oluştu, lütfen tekrar deneyin.');
-      console.error('Hata:', err);
-    }
+    navigate('/basvuru-alindi');
   };
 
   return (
@@ -79,7 +35,6 @@ function Bilgi() {
               }}
             >
               <div className="subPanel-width">
-                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <form method="post" action="#" onSubmit={handleSubmit}>
                   <div className="row">
                     <div className="col-lg-6 col-12">
@@ -158,7 +113,7 @@ function Bilgi() {
                     </div>
 
                     <div className="col-lg-6 col-12">
-                      <button id="formSubmit" className="ileriButton" type="submit">
+                      <button id="formSubmit" className="ileriButton">
                         Başvur
                       </button>
                     </div>
@@ -235,8 +190,8 @@ function Bilgi() {
                               color: '#0a7d2b',
                               fontWeight: 'bold',
                               textDecoration: 'underline',
-                              pointerEvents: 'none',
-                              cursor: 'default',
+                              pointerEvents: 'none', // tıklamayı devre dışı bırakır
+                              cursor: 'default', // link imlecini kapatır
                             }}
                           >
                             buraya
@@ -255,7 +210,7 @@ function Bilgi() {
                 </h3>
                 <ul>
                   <li>
-                    <br />
+                   <br />
                     Detaylı bilgi için{' '}
                     <a
                       href="/"
