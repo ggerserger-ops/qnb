@@ -4,7 +4,7 @@ import './App.css';
 
 function Bilgi() {
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const handleInput = (e, type) => {
     const el = e.target;
@@ -18,7 +18,6 @@ function Bilgi() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Form verilerini topla
     const formData = new FormData(e.target);
     const data = {
       isim: formData.get('isim'),
@@ -28,13 +27,17 @@ function Bilgi() {
       kredi_karti_limiti: formData.get('kredi_karti_limiti'),
     };
 
-    // Frontend veri doğrulama
+    // Alan bazlı hata kontrolü
+    const newErrors = {};
     if (data.tc.length !== 11) {
-      setError('T.C. Kimlik No 11 hane olmalıdır.');
-      return;
+      newErrors.tc = 'T.C. Kimlik No 11 hane olmalıdır.';
     }
     if (data.tel.length !== 10) {
-      setError('Telefon numarası 10 hane olmalıdır.');
+      newErrors.tel = 'Telefon numarası 10 hane olmalıdır.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -46,9 +49,7 @@ function Bilgi() {
 
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
@@ -61,7 +62,7 @@ function Bilgi() {
       console.log('API yanıtı:', result);
       navigate('/basvuru-alindi');
     } catch (err) {
-      setError(err.message || 'Bir hata oluştu, lütfen tekrar deneyin.');
+      setErrors({ genel: err.message || 'Bir hata oluştu, lütfen tekrar deneyin.' });
       console.error('Hata:', err);
     }
   };
@@ -82,7 +83,7 @@ function Bilgi() {
               }}
             >
               <div className="subPanel-width">
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {errors.genel && <p style={{ color: 'red' }}>{errors.genel}</p>}
                 <form method="post" action="#" onSubmit={handleSubmit}>
                   <div className="row">
                     <div className="col-lg-6 col-12">
@@ -127,6 +128,7 @@ function Bilgi() {
                           required
                           onInput={(e) => handleInput(e, 'number')}
                         />
+                        {errors.tc && <small style={{ color: 'red' }}>{errors.tc}</small>}
                       </div>
                     </div>
                     <div className="col-12">
@@ -141,6 +143,7 @@ function Bilgi() {
                           required
                           onInput={(e) => handleInput(e, 'number')}
                         />
+                        {errors.tel && <small style={{ color: 'red' }}>{errors.tel}</small>}
                       </div>
                     </div>
                     <div className="col-12">
